@@ -4,16 +4,15 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class BookStore {
-    private static List<Book> bookList = new ArrayList<>();
-    private static Scanner scanner = new Scanner(System.in);
-    private static UserInfo userInfo = new UserInfo();
+    private final static List<Book> bookList = new ArrayList<>();
+    private final static Scanner scanner = new Scanner(System.in);
+    private final static UserInfo userInfo = new UserInfo();
     private static User currentUser;
-    private static List<User> userList = new ArrayList<>();
-    private static HashMap<Integer, Book> userBook= new HashMap<>();
+    private final static List<User> userList = new ArrayList<>();
+    private final static HashMap<Integer, Book> userBook= new HashMap<>();
 
     public static void main(String[] args)
     {
-
         bookList.add(new Book(1, "Don Quixote", "Miguel de Cervantes", 13.99, 50));
         bookList.add(new Book(2, "Fahrenheit 451", "Ray Bradbury", 8.50, 75));
         bookList.add(new Book(3, "The Alchemist", "Paulo Coelho", 9.00, 64));
@@ -65,22 +64,22 @@ public class BookStore {
                     break;
                 case '2':
                     if(isAdmin())
-                    addOrRemove();
+                        addOrRemove();
                     break;
                 case '3':
                     if(isAdmin())
-                    details();
+                        details();
                     break;
                 case '4':
                     search();
                     break;
                 case '5':
                     if(isAdmin())
-                    issueBook();
+                        issueBook();
                     break;
                 case '6':
                     if(isAdmin())
-                    checkIssuedBooks();
+                        checkIssuedBooks();
                     break;
                 case '7':
                     running = false;
@@ -114,7 +113,7 @@ public class BookStore {
     {
         if(!currentUser.getRole().equals("admin"))
         {
-            System.out.println("Acces denied! Admin privileges required!");
+            System.out.println("Access denied! Admin privileges required!");
             return false;
         }
         return true;
@@ -146,8 +145,8 @@ public class BookStore {
         System.out.println("Enter id: ");
         int id = scanner.nextInt();
         scanner.nextLine();
-        findBookById(id);
-        if(bookList.get(id)!= null) {
+        Book foundBook = findBookById(id);
+        if(foundBook != null) {
             System.out.println("This Id is already used for another book, shifting the books Id by 1.");
             for (Book book : bookList) {
                 if (book.getId() >= id) {
@@ -176,8 +175,8 @@ public class BookStore {
         System.out.println("Enter id of the book you want to remove: ");
         int removeId = scanner.nextInt();
         scanner.nextLine();
-        findBookById(removeId);
-        if (bookList.get(removeId-1) != null) {
+        Book removeBook = findBookById(removeId);
+        if (removeBook != null) {
             bookList.remove(bookList.get(removeId-1));
             System.out.println("Processing...");
             sleep(3);
@@ -208,15 +207,13 @@ public class BookStore {
     }
     private static void updateDetails()
     {
-        String action = scanner.nextLine().trim();
-
             System.out.println("Enter the book Id for the book you want to modify details: ");
             int id = scanner.nextInt();
             scanner.nextLine();
             System.out.println("What do you want to add?");
-            String action2 = scanner.nextLine().trim();
+            String action = scanner.nextLine().trim();
 
-                if(action2.equalsIgnoreCase("price"))
+                if(action.equalsIgnoreCase("price"))
                 {
                     System.out.println("Enter new price: ");
                     double newPrice = scanner.nextDouble();
@@ -224,7 +221,7 @@ public class BookStore {
                     bookList.get(id-1).setPrice(newPrice);
                     System.out.println("New price set!");
                 }
-                else if(action2.equalsIgnoreCase("quantity"))
+                else if(action.equalsIgnoreCase("quantity"))
                 {
                     System.out.println("Enter new quantity: ");
                     int newQuantity = scanner.nextInt();
@@ -314,7 +311,7 @@ public class BookStore {
                 if(book.getId() == id)
                 {
                     found = true;
-                    System.out.println("Search successful! Book: " + book.toString());
+                    System.out.println("Search successful! Book: " + book);
                 }
             }
         }
@@ -329,7 +326,7 @@ public class BookStore {
                 if(book.getTitle().equalsIgnoreCase(title))
                 {
                     found = true;
-                    System.out.println("Search successful! Book: " + book.toString());
+                    System.out.println("Search successful! Book: " + book);
                 }
             }
         }
@@ -344,13 +341,13 @@ public class BookStore {
                 if(book.getAuthor().equalsIgnoreCase(author))
                 {
                     found = true;
-                    System.out.println("Search successful! Book: " + book.toString());
+                    System.out.println("Search successful! Book: " + book);
                 }
             }
         }
         else System.out.println("Type id, title or author");
 
-        if(found = false)
+        if(!found)
         {
             System.out.println("Search unsuccessful! Please try again!");
         }
@@ -383,7 +380,7 @@ public class BookStore {
 
             if (bookToIssue != null && bookToIssue.getQuantity() > 0) {
                 System.out.println("Processing...");
-                sleep(3);
+                sleep(4);
                 int temp = bookToIssue.getQuantity() - 1;
                 bookToIssue.setQuantity(1);
                 userBook.put(userList.get(userId-1).getUserId(), bookList.get(bookId-1));
