@@ -1,7 +1,11 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.io.FileWriter;
 
 public class BookStore {
     private final static List<Book> bookList = new ArrayList<>();
@@ -9,25 +13,12 @@ public class BookStore {
     private final static UserInfo userInfo = new UserInfo();
     private static User currentUser;
     private final static List<User> userList = new ArrayList<>();
-    private final static HashMap<Integer, Book> userBook= new HashMap<>();
+    private final static HashMap<Integer, List<Book>> userBook= new HashMap<>();
 
     public static void main(String[] args)
     {
-        bookList.add(new Book(1, "Don Quixote", "Miguel de Cervantes", 13.99, 50));
-        bookList.add(new Book(2, "Fahrenheit 451", "Ray Bradbury", 8.50, 75));
-        bookList.add(new Book(3, "The Alchemist", "Paulo Coelho", 9.00, 64));
-        bookList.add(new Book(4, "Little Women", "Alcott Louisa May", 25.60, 87));
-        bookList.add(new Book(5, "Crime and Punishment", "Dostoevsky Fyodor", 11.30, 68));
-        bookList.add(new Book(6, "The Housemaid", "Freida McFadden", 9.99, 36));
-        bookList.add(new Book(7, "Twisted games", "Ana Huang", 10.99, 55));
-        bookList.add(new Book(8, "Gods of Eden", "William Bramley", 12.99, 23));
-        bookList.add(new Book(9, "Secret History", "Donna Tartt", 9.99, 73));
-        bookList.add(new Book(10, "1984", "George Orwell", 7.50, 72));
-
-        userList.add(new User(1, "Mihaela123","mija35", "user"));
-        userList.add(new User(2, "Mytro", "lukeskywalker2004", "user"));
-        userList.add(new User(3, "damian", "chitara56", "user"));
-        userList.add(new User(4, "cosminBoss", "cosmin2004", "user"));
+        loadBooks("BooksData.txt");
+        loadUsers("UserData.txt");
 
         System.out.println("Book list: ");
         for(Book book : bookList)
@@ -40,6 +31,47 @@ public class BookStore {
             showMenu();
         }
         scanner.close();
+    }
+    private static void loadBooks(String fileName)
+    {
+        try(BufferedReader reader = new BufferedReader(new FileReader(fileName)))
+        {
+            String line;
+            while((line = reader.readLine()) != null)
+            {
+                String[] fields = line.split(",");
+                int id = Integer.parseInt(fields[0].trim());
+                String title = fields[1].trim();
+                String author = fields[2].trim();
+                double price = Double.parseDouble(fields[3].trim());
+                int quantity = Integer.parseInt(fields[4].trim());
+
+                bookList.add(new Book(id, title, author, price, quantity));
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading books file: " + e.getMessage());
+        }
+    }
+    private static void loadUsers(String fileName)
+    {
+        try(BufferedReader reader = new BufferedReader(new FileReader(fileName)))
+        {
+            String line;
+            while((line = reader.readLine()) != null)
+            {
+                String[] fields = line.split(",");
+                int id = Integer.parseInt(fields[0].trim());
+                String userName = fields[1].trim();
+                String passwords = fields[2].trim();
+                String role = fields[3].trim();
+
+                userList.add(new User(id, userName, passwords, role));
+            }
+        }
+        catch(IOException e)
+        {
+            System.out.println("Error reading users file: " + e.getMessage());
+        }
     }
     private static void showMenu()
     {
@@ -177,7 +209,7 @@ public class BookStore {
         scanner.nextLine();
         Book removeBook = findBookById(removeId);
         if (removeBook != null) {
-            bookList.remove(bookList.get(removeId-1));
+            bookList.remove(removeBook);
             System.out.println("Processing...");
             sleep(3);
             System.out.println("Book removed");
@@ -370,21 +402,38 @@ public class BookStore {
             int bookId = scanner.nextInt();
             scanner.nextLine();
 
-            Book bookToIssue = null;
-            for (Book book : bookList) {
-                if (book.getId() == bookId) {
-                    bookToIssue = book;
-                    break;
-                }
-            }
+            Book bookToIssue = findBookById(bookId);
 
             if (bookToIssue != null && bookToIssue.getQuantity() > 0) {
                 System.out.println("Processing...");
                 sleep(4);
-                int temp = bookToIssue.getQuantity() - 1;
-                bookToIssue.setQuantity(1);
-                userBook.put(userList.get(userId-1).getUserId(), bookList.get(bookId-1));
-                bookToIssue.setQuantity(temp);
+
+                List<Book> userBookList = userBook.getOrDefault(userId, new ArrayList<>());
+                Book userCopy = null;
+                for (Book b : userBookList) {
+                    if (b.getId() == bookId) {
+                        userCopy = b;
+                        break;
+                    }
+                }
+                if(userCopy != null) {
+                    userCopy.setQuantity(userCopy.getQuantity() + 1);
+                }
+                else {
+                    Book newUserBook = new Book(bookToIssue.getId(), bookToIssue.getTitle(), bookToIssue.getAuthor(), bookToIssue.getPrice(), 1);
+                    userBookList.add(newUserBook);
+                }
+                userBook.put(userId, userBookList);
+                bookToIssue.setQuantity(bookToIssue.getQuantity() - 1);
+                try {
+                    FileWriter administrationFile = new FileWriter("IssuedBooks.txt");
+                    administrationFile.write(userBook.getOrDefault(userId, userBookList).toString());
+                    administrationFile.close();
+                }
+                catch (IOException e)
+                {
+                    System.out.println("An error occurred: " + e.getMessage());
+                }
                 System.out.println("Book issued successfully! Book sent to user " + userList.get(userId - 1).getUserName());
 
             } else {
@@ -403,8 +452,17 @@ public class BookStore {
         scanner.nextLine();
 
             if (userId >= 1 && userId <= userList.size()) {
-                System.out.println("User " + userList.get(userId - 1).getUserName() + " has issued: " + userBook.get(userId));
+                List<Book> issuedBooks = userBook.get(userId);
+                if(userBook.get(userId) != null) {
+                    System.out.println("User " + userList.get(userId - 1).getUserName() + " has issued: \n");
+                    for(Book book : issuedBooks)
+                    {
+                        System.out.println(book.toString());
+                    }
+                }
+                else System.out.println("User " + userList.get(userId - 1).getUserName() + " has no issued books");
             }
+            else System.out.println("Insert a correct user Id");
     }
     private static Book findBookById(int id)
     {

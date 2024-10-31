@@ -1,0 +1,10 @@
+1,Don Quixote,Miguel de Cervantes,13.99,50
+2,Fahrenheit 451,Ray Bradbury,8.50,75
+3,The Alchemist,Paulo Coelho,9.00,64
+4,Little Women,Alcott Louisa May,25.60,87
+5,Crime and Punishment,Dostoevsky Fyodor,11.30,68
+6,The Housemaid,Freida McFadden,9.99,36
+7,Twisted games,Ana Huang,10.99,55
+8,Gods of Eden,William Bramley,12.99,23
+9,Secret History,Donna Tartt,9.99,73
+10,1984,George Orwell,7.50,72
