@@ -29,4 +29,22 @@ public class User
     {
         return role;
     }
+    public void setUserName(String userName)
+    {
+        this.userName = userName;
+    }
+    public void setPassword(String password)
+    {
+        this.password = password;
+    }
+    public void setUserId(int userId)
+    {
+        this.userId = userId;
+    }
+
+    @Override
+    public String toString()
+    {
+        return getUserId() + "," + getUserName() + "," + getPassword() + "," + getRole();
+    }
 }

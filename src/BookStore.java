@@ -1,11 +1,10 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
-import java.io.FileWriter;
+import javax.crypto.SecretKey;
+
 
 public class BookStore {
     private final static List<Book> bookList = new ArrayList<>();
@@ -17,24 +16,33 @@ public class BookStore {
 
     public static void main(String[] args)
     {
-        loadBooks("BooksData.txt");
-        loadUsers("UserData.txt");
+        loadBooks();
+        loadUsers();
 
-        System.out.println("Book list: ");
-        for(Book book : bookList)
+        System.out.println("Would you like to sign in or log in ? (sign in/login)");
+        String action = scanner.nextLine();
+        if(action.equalsIgnoreCase("sign in"))
         {
-            System.out.println(book.toString());
+            signIn();
+            System.out.println("Now please log in");
+            if(login())
+            {
+                showMenu();
+            }
         }
-
-        if(login())
+        else if (action.equalsIgnoreCase("login"))
         {
-            showMenu();
+            if(login())
+            {
+                showMenu();
+            }
         }
+        else System.out.println("Type sign in or login");
         scanner.close();
     }
-    private static void loadBooks(String fileName)
+    private static void loadBooks()
     {
-        try(BufferedReader reader = new BufferedReader(new FileReader(fileName)))
+        try(BufferedReader reader = new BufferedReader(new FileReader("BooksData.txt")))
         {
             String line;
             while((line = reader.readLine()) != null)
@@ -45,16 +53,15 @@ public class BookStore {
                 String author = fields[2].trim();
                 double price = Double.parseDouble(fields[3].trim());
                 int quantity = Integer.parseInt(fields[4].trim());
-
                 bookList.add(new Book(id, title, author, price, quantity));
             }
         } catch (IOException e) {
             System.out.println("Error reading books file: " + e.getMessage());
         }
     }
-    private static void loadUsers(String fileName)
+    private static void loadUsers()
     {
-        try(BufferedReader reader = new BufferedReader(new FileReader(fileName)))
+        try(BufferedReader reader = new BufferedReader(new FileReader("UserData.txt")))
         {
             String line;
             while((line = reader.readLine()) != null)
@@ -121,25 +128,60 @@ public class BookStore {
             }
         }
     }
-    private static boolean login()
-    {
+    private static boolean login() {
         System.out.println("\nWelcome to the bookstore! Please insert username: ");
         String username = scanner.nextLine();
         System.out.println("Please insert password: ");
         String password = scanner.nextLine();
 
         User user = userInfo.getUser(username);
-        if(user != null && user.getPassword().equals(password))
-        {
+        SecretKey key = null;
+        if (user != null && user.getPassword().equals((password))) {
             currentUser = user;
             System.out.println("Login successful! Welcome, " + currentUser.getUserName());
             return true;
-        }
-        else
-        {
+        } else {
             System.out.println("Invalid username or password!");
             return false;
         }
+    }
+    private static void signIn()
+    {
+        User user = new User(0, "", "", "user");
+        System.out.println("Enter username");
+        String username = scanner.nextLine();
+        user.setUserName(username);
+        System.out.println("Enter password");
+        String password = scanner.nextLine();
+        System.out.println("Re-enter password");
+        String password2 = scanner.nextLine();
+        if(password2.equals(password)) {
+            user.setPassword(password);
+        }
+        else System.out.println("Passwords do not match");
+        try {
+            FileWriter signInFile = new FileWriter("UserData.txt", true);
+            try(BufferedReader bufferedReader = new BufferedReader(new FileReader("UserData.txt")))
+            {
+                int k = 0;
+                while(bufferedReader.readLine() != null) {
+                    k++;
+                }
+                if(bufferedReader.readLine() == null)
+                {
+                    user.setUserId(k + 1);
+                }
+            }
+            signInFile.write("\n" + user);
+            signInFile.close();
+            System.out.println("Sign in successful!");
+        }
+        catch (IOException e)
+        {
+            System.out.println("An error occurred: " + e.getMessage());
+        }
+
+        userInfo.addUser(username, user);
     }
     private static boolean isAdmin()
     {

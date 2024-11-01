@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Map;
 
 public class UserInfo
 {
@@ -13,9 +14,12 @@ public class UserInfo
 
         loginInfo.put("admin", new User(0, "admin", "admin123", "admin"));
     }
-
     public User getUser(String username)
     {
         return loginInfo.get(username);
+    }
+    public void addUser(String username, User user)
+    {
+        loginInfo.put(username, user);
     }
 }
